@@ -1,6 +1,6 @@
 <template>
   <div id="mainContainer">
-    <h1>{{ hello }}</h1>
+    <h1>{{ welcome }}{{ currTime }}</h1>
   </div>
 </template>
 
@@ -9,12 +9,24 @@ export default {
   name: 'MainContainer',
   data () {
     return {
-      hello: 'Hello world'
+      welcome: '欢迎使用，现在是',
+      currTime: this.$moment().format('MMMDo,a h:mm:ss')
     }
+  },
+  mounted () {
+    setInterval(() => {
+      this.currTime = this.$moment().format('MMMDo,a h:mm:ss')
+    }, 1000)
   }
 }
 </script>
 
 <style lang="scss" scoped>
-
+#mainContainer {
+  h1 {
+    margin-top: 18%;
+    font-size: 36px;
+    font-weight: 700;
+  }
+}
 </style>

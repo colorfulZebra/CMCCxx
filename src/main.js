@@ -4,8 +4,12 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
+import moment from 'moment'
 
 Vue.config.productionTip = false
+Vue.prototype.$moment = moment
+Vue.prototype.$moment.locale('zh-cn')
 
 Vue.use(ElementUI)
 

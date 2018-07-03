@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
 import MainContainer from '@/components/MainContainer'
+import DailyList1 from '@/components/DailyList1'
 
 Vue.use(Router)
 
@@ -13,9 +13,9 @@ export default new Router({
       component: MainContainer
     },
     {
-      path: '/hello',
-      name: 'HelloWorld',
-      component: HelloWorld
+      path: '/dailylist1',
+      name: 'DailyList1',
+      component: DailyList1
     }
   ]
 })
