@@ -16,7 +16,9 @@
       <el-col :span="23" :offset="1">
         <span class="lsttitle">全量数据清单:</span> 西咸新区全量客户基础清单，包含字段xxx、xxx、xxx
         <el-upload
-         action="/api/upload"
+         action="/upload/fulllist"
+         name="fullList"
+         :on-success="successUploaded"
          :before-remove="beforeRemove"
          :limit="1">
           <a href="javascript:void(0)">点击上传</a>
@@ -25,7 +27,9 @@
       <el-col :span="23" :offset="1" style="margin-top: 60px">
         <span class="lsttitle">目标客户清单:</span> 目标客户清单，包含用户号码
         <el-upload
-         action="/api/upload"
+         action="/upload/targetlist"
+         name="targetList"
+         :on-success="successUploaded"
          :before-remove="beforeRemove"
          :limit="1">
           <a href="javascript:void(0)">点击上传</a>
@@ -104,6 +108,9 @@ export default {
     },
     beforeRemove (file, fileList) {
       return this.$confirm(`确定移除 ${file.name}?`)
+    },
+    successUploaded (response, file, fileList) {
+      console.log(response)
     }
   }
 }
