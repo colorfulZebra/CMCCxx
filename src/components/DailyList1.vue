@@ -13,27 +13,58 @@
       </el-col>
     </el-row>
     <el-row v-show="active===0">
-      <el-col :span="23" :offset="1">
-        <span class="lsttitle">全量数据清单:</span> 西咸新区全量客户基础清单，包含字段xxx、xxx、xxx
+      <el-col :span="22" :offset="1" style="margin-bottom: 30px;">
+        <span class="lsttitle">全量数据清单: </span>西咸新区全量客户基础清单，包含字段xxx、xxx、xxx
         <el-upload
          action="/upload/fulllist"
          name="fullList"
+         accept=".txt"
          :on-success="successUploaded"
          :before-remove="beforeRemove"
          :limit="1">
           <a href="javascript:void(0)">点击上传</a>
         </el-upload>
       </el-col>
-      <el-col :span="23" :offset="1" style="margin-top: 60px">
-        <span class="lsttitle">目标客户清单:</span> 目标客户清单，包含用户号码
+      <el-col :span="22" :offset="1">
+        <span class="lsttitle">全量营销清单: </span>西咸新区全量客户营销清单，包含字段xxx、xxx、xxx
         <el-upload
-         action="/upload/targetlist"
-         name="targetList"
+         action="/upload/marketlist"
+         name="marketList"
+         accept=".txt"
          :on-success="successUploaded"
          :before-remove="beforeRemove"
          :limit="1">
           <a href="javascript:void(0)">点击上传</a>
         </el-upload>
+      </el-col>
+      <el-col :span="22" :offset="1" style="margin-top: 30px">
+        <span class="lsttitle">目标客户清单:</span> 目标客户清单，包含用户号码，分为西安和咸阳两部分
+        <el-row style="margin-top: 10px;">
+          <el-col :span="10">
+            西安
+            <el-upload
+            action="/upload/targetlist/xian"
+            name="targetListxa"
+            accept=".txt"
+            :on-success="successUploaded"
+            :before-remove="beforeRemove"
+            :limit="1">
+              <a href="javascript:void(0)">点击上传</a>
+            </el-upload>
+          </el-col>
+          <el-col :span="10" :offset="1">
+            咸阳
+            <el-upload
+            action="/upload/targetlist/xianyang"
+            name="targetListxy"
+            accept=".txt"
+            :on-success="successUploaded"
+            :before-remove="beforeRemove"
+            :limit="1">
+              <a href="javascript:void(0)">点击上传</a>
+            </el-upload>
+          </el-col>
+        </el-row>
       </el-col>
     </el-row>
     <el-row v-show="active===1">
@@ -84,7 +115,13 @@ export default {
         { type: 'danger', title: '已办理', desc: '用户已经办理流量风暴相关的产品、优惠、或营销包' },
         { type: 'success', title: '小号或副卡', desc: '用户办理了小号或副卡的优惠，或存在小号或副卡关系' }
       ],
-      explainStr: ''
+      explainStr: '',
+      files: {
+        fulllist: '',
+        marketlist: '',
+        targetlistxa: '',
+        targetlistxy: ''
+      }
     }
   },
   mounted () {
@@ -102,15 +139,39 @@ export default {
   },
   methods: {
     next () {
-      if (this.active < this.steps.length) {
+      if (this.active === 0) {
+        if (this.files.fulllist.length &&
+            this.files.marketlist.length &&
+            this.files.targetlistxa.length &&
+            this.files.targetlistxy.length) {
+          this.active += 1
+        } else {
+          this.$message({
+            message: '并未上传所有必须清单！',
+            type: 'warning'
+          })
+        }
+      } else if (this.active < this.steps.length) {
         this.active += 1
+      } else {
       }
     },
     beforeRemove (file, fileList) {
       return this.$confirm(`确定移除 ${file.name}?`)
     },
     successUploaded (response, file, fileList) {
-      console.log(response)
+      if (response.result === 0) {
+        if (response.filename.startsWith('fullList')) {
+          this.files.fulllist = response.filename
+        } else if (response.filename.startsWith('marketList')) {
+          this.files.marketlist = response.filename
+        } else if (response.filename.startsWith('targetListxa')) {
+          this.files.targetlistxa = response.filename
+        } else if (response.filename.startsWith('targetListxy')) {
+          this.files.targetlistxy = response.filename
+        } else {
+        }
+      }
     }
   }
 }
