@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" v-loading="inprocess" element-loading-text="拼命筛选中，请稍等" element-loading-spinner="el-icon-loading" element-loading-background="rgba(0, 0, 0, 0.8)">
     <el-container>
       <el-header>
         <i class="el-icon-news"></i>
@@ -23,7 +23,7 @@
           </el-menu>
         </el-aside>
         <el-main>
-          <router-view></router-view>
+          <router-view @inprocess="updateInprocess"></router-view>
         </el-main>
       </el-container>
     </el-container>
@@ -36,6 +36,7 @@ export default {
   data () {
     return {
       title: '西咸自助分析平台',
+      inprocess: false,
       menuidx: null
     }
   },
@@ -44,6 +45,9 @@ export default {
   methods: {
     recordReport (idx) {
       this.menuidx = idx
+    },
+    updateInprocess (inprocessNew) {
+      this.inprocess = inprocessNew
     }
   }
 }

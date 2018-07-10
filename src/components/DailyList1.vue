@@ -97,6 +97,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: 'dailyList1',
   data () {
@@ -121,6 +122,11 @@ export default {
         marketlist: '',
         targetlistxa: '',
         targetlistxy: ''
+      },
+      result_list: {
+        total: 0,
+        compliance: 0,
+        non_compliance: 0
       }
     }
   },
@@ -140,10 +146,7 @@ export default {
   methods: {
     next () {
       if (this.active === 0) {
-        if (this.files.fulllist.length &&
-            this.files.marketlist.length &&
-            this.files.targetlistxa.length &&
-            this.files.targetlistxy.length) {
+        if (this.files.fulllist.length && this.files.marketlist.length && (this.files.targetlistxa.length || this.files.targetlistxy.length)) {
           this.active += 1
         } else {
           this.$message({
@@ -151,26 +154,51 @@ export default {
             type: 'warning'
           })
         }
-      } else if (this.active < this.steps.length) {
+      } else if (this.active < this.steps.length - 1) {
         this.active += 1
+      } else if (this.active === this.steps.length - 1) {
+        this.$emit('inprocess', true)
+        axios.post('/result/list', {
+          basefile: 'data/base.txt',
+          marketfile: 'data/trade.txt',
+          targetfile: 'data/test.txt'
+        }).then((response) => {
+          if (response.data.return.code !== 0) {
+            this.$message({
+              message: response.data.return.message,
+              type: 'error'
+            })
+          } else {
+            this.$message({
+              message: '成功',
+              type: 'success'
+            })
+            this.result_list = response.data.data
+            console.log(this.result_list)
+            this.active += 1
+          }
+          this.$emit('inprocess', false)
+        })
       } else {
+        this.$message({
+          message: '到达了无人可抵达的荒漠',
+          type: 'error'
+        })
       }
     },
     beforeRemove (file, fileList) {
       return this.$confirm(`确定移除 ${file.name}?`)
     },
     successUploaded (response, file, fileList) {
-      if (response.result === 0) {
-        if (response.filename.startsWith('fullList')) {
-          this.files.fulllist = response.filename
-        } else if (response.filename.startsWith('marketList')) {
-          this.files.marketlist = response.filename
-        } else if (response.filename.startsWith('targetListxa')) {
-          this.files.targetlistxa = response.filename
-        } else if (response.filename.startsWith('targetListxy')) {
-          this.files.targetlistxy = response.filename
-        } else {
-        }
+      if (response.filename.startsWith('fullList')) {
+        this.files.fulllist = response.filename
+      } else if (response.filename.startsWith('marketList')) {
+        this.files.marketlist = response.filename
+      } else if (response.filename.startsWith('targetListxa')) {
+        this.files.targetlistxa = response.filename
+      } else if (response.filename.startsWith('targetListxy')) {
+        this.files.targetlistxy = response.filename
+      } else {
       }
     }
   }
