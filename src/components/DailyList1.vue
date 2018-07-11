@@ -14,7 +14,7 @@
     </el-row>
     <el-row v-show="active===0">
       <el-col :span="22" :offset="1" style="margin-bottom: 30px;">
-        <span class="lsttitle">全量数据清单: </span>西咸新区全量客户基础清单，包含字段xxx、xxx、xxx
+        <span class="lsttitle">全量数据清单: </span>西咸新区全量客户基础清单，包含基础信息字段，如arpu、mou、dou等
         <el-upload
          action="/upload/fulllist"
          name="fullList"
@@ -26,7 +26,7 @@
         </el-upload>
       </el-col>
       <el-col :span="22" :offset="1">
-        <span class="lsttitle">全量营销清单: </span>西咸新区全量客户营销清单，包含字段xxx、xxx、xxx
+        <span class="lsttitle">全量营销清单: </span>西咸新区全量客户营销清单，包含用户办理优惠、营销活动或者产品变更
         <el-upload
          action="/upload/marketlist"
          name="marketList"
@@ -38,33 +38,16 @@
         </el-upload>
       </el-col>
       <el-col :span="22" :offset="1" style="margin-top: 30px">
-        <span class="lsttitle">目标客户清单:</span> 目标客户清单，包含用户号码，分为西安和咸阳两部分
-        <el-row style="margin-top: 10px;">
-          <el-col :span="10">
-            西安
-            <el-upload
-            action="/upload/targetlist/xian"
-            name="targetListxa"
-            accept=".txt"
-            :on-success="successUploaded"
-            :before-remove="beforeRemove"
-            :limit="1">
-              <a href="javascript:void(0)">点击上传</a>
-            </el-upload>
-          </el-col>
-          <el-col :span="10" :offset="1">
-            咸阳
-            <el-upload
-            action="/upload/targetlist/xianyang"
-            name="targetListxy"
-            accept=".txt"
-            :on-success="successUploaded"
-            :before-remove="beforeRemove"
-            :limit="1">
-              <a href="javascript:void(0)">点击上传</a>
-            </el-upload>
-          </el-col>
-        </el-row>
+        <span class="lsttitle">目标客户清单:</span> 目标客户清单，包含用户号码和自定义标志
+        <el-upload
+        action="/upload/targetlist"
+        name="targetList"
+        accept=".txt"
+        :on-success="successUploaded"
+        :before-remove="beforeRemove"
+        :limit="1">
+          <a href="javascript:void(0)">点击上传</a>
+        </el-upload>
       </el-col>
     </el-row>
     <el-row v-show="active===1">
@@ -91,7 +74,12 @@
       </el-col>
     </el-row>
     <el-row v-show="active===3">
-      <el-col :span="24">Report</el-col>
+      <el-col :span="20" :offset="2">
+        <h3 style="margin-top:36px">
+          共处理记录<span style="color: dimgray">{{result_list.total}}</span>条，剔除其中<span style="color: red">{{result_list.non_compliance}}</span>条记录，保留<span style="color: forestgreen">{{result_list.compliance}}</span>条记录
+        </h3>
+        <a href="/download/result">下载剔除后清单</a><a style="margin-left:36px;" href="/download/resulterr">下载被剔除清单</a>
+      </el-col>
     </el-row>
   </div>
 </template>
@@ -120,8 +108,7 @@ export default {
       files: {
         fulllist: '',
         marketlist: '',
-        targetlistxa: '',
-        targetlistxy: ''
+        targetlist: ''
       },
       result_list: {
         total: 0,
@@ -146,8 +133,49 @@ export default {
   methods: {
     next () {
       if (this.active === 0) {
-        if (this.files.fulllist.length && this.files.marketlist.length && (this.files.targetlistxa.length || this.files.targetlistxy.length)) {
-          this.active += 1
+        if (this.files.fulllist.length && this.files.marketlist.length && this.files.targetlist.length) {
+          let errorMsg = []
+          this.$emit('inprocess', { flag: true, title: '正在检查输入文件，请稍等' })
+          axios.post('/fileinfo', {
+            file: this.files.fulllist
+          }).then((response) => {
+            if (response.data.return.code === 0) {
+              if (!(response.data.data.lines > 0 && response.data.data.title.split('|').length === 18)) {
+                errorMsg.push('全量数据清单文件内容错误，无数据或缺少必要字段')
+              }
+            } else {
+              errorMsg.push(`全量数据清单，${response.data.return.message}`)
+            }
+            return axios.post('/fileinfo', { file: this.files.marketlist })
+          }).then((response) => {
+            if (response.data.return.code === 0) {
+              if (!(response.data.data.lines > 0 && response.data.data.title.split('|').length === 7)) {
+                errorMsg.push('全量营销清单文件内容错误，无数据或缺少必要字段')
+              }
+            } else {
+              errorMsg.push(`全量营销清单，${response.data.return.message}`)
+            }
+            return axios.post('/fileinfo', { file: this.files.targetlist })
+          }).then((response) => {
+            if (response.data.return.code === 0) {
+              if (!(response.data.data.lines > 0 && response.data.data.title.split('\t').length === 2)) {
+                errorMsg.push('目标客户清单文件内容错误，无数据或缺少必要字段')
+              }
+            } else {
+              errorMsg.push(`目标客户清单，${response.data.return.message}`)
+            }
+            this.$emit('inprocess', { flag: false, title: '' })
+            if (errorMsg.length === 0) {
+              this.active += 1
+            } else {
+              this.$message({
+                dangerouslyUseHTMLString: true,
+                message: errorMsg.join('<br><br>'),
+                type: 'error',
+                duration: 9000
+              })
+            }
+          })
         } else {
           this.$message({
             message: '并未上传所有必须清单！',
@@ -157,11 +185,11 @@ export default {
       } else if (this.active < this.steps.length - 1) {
         this.active += 1
       } else if (this.active === this.steps.length - 1) {
-        this.$emit('inprocess', true)
+        this.$emit('inprocess', { flag: true, title: '拼命筛选清单中，请稍等' })
         axios.post('/result/list', {
-          basefile: 'data/base.txt',
-          marketfile: 'data/trade.txt',
-          targetfile: 'data/test.txt'
+          basefile: this.files.fulllist,
+          marketfile: this.files.marketlist,
+          targetfile: this.files.targetlist
         }).then((response) => {
           if (response.data.return.code !== 0) {
             this.$message({
@@ -174,10 +202,9 @@ export default {
               type: 'success'
             })
             this.result_list = response.data.data
-            console.log(this.result_list)
             this.active += 1
           }
-          this.$emit('inprocess', false)
+          this.$emit('inprocess', { flag: false, title: '' })
         })
       } else {
         this.$message({
@@ -194,10 +221,8 @@ export default {
         this.files.fulllist = response.filename
       } else if (response.filename.startsWith('marketList')) {
         this.files.marketlist = response.filename
-      } else if (response.filename.startsWith('targetListxa')) {
-        this.files.targetlistxa = response.filename
-      } else if (response.filename.startsWith('targetListxy')) {
-        this.files.targetlistxy = response.filename
+      } else if (response.filename.startsWith('targetList')) {
+        this.files.targetlist = response.filename
       } else {
       }
     }

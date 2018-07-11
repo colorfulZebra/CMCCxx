@@ -1,5 +1,5 @@
 <template>
-  <div id="app" v-loading="inprocess" element-loading-text="拼命筛选中，请稍等" element-loading-spinner="el-icon-loading" element-loading-background="rgba(0, 0, 0, 0.8)">
+  <div id="app" v-loading="inprocess.flag" :element-loading-text="inprocess.title" element-loading-spinner="el-icon-loading" element-loading-background="rgba(0, 0, 0, 0.8)">
     <el-container>
       <el-header>
         <i class="el-icon-news"></i>
@@ -11,13 +11,13 @@
             <el-submenu index="1">
               <template slot="title">
                 <i class="el-icon-menu"></i>
-                <span>报表</span>
+                <span>所有清单报表</span>
               </template>
               <el-menu-item-group>
-                <template slot="title">分组1</template>
-                <el-menu-item index="/dailylist1">报表1</el-menu-item>
-                <el-menu-item index="1-2">报表2</el-menu-item>
-                <el-menu-item index="1-3">报表3</el-menu-item>
+                <template slot="title">2018年分组</template>
+                <el-menu-item index="/dailylist1">流量风暴清单</el-menu-item>
+                <el-menu-item index="1-2">报表清单other</el-menu-item>
+                <el-menu-item index="1-3">报表清单last</el-menu-item>
               </el-menu-item-group>
             </el-submenu>
           </el-menu>
@@ -36,7 +36,10 @@ export default {
   data () {
     return {
       title: '西咸自助分析平台',
-      inprocess: false,
+      inprocess: {
+        flag: false,
+        title: ''
+      },
       menuidx: null
     }
   },
