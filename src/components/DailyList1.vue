@@ -63,10 +63,13 @@
     </el-row>
     <el-row v-show="active===2">
       <el-col :span="24" style="margin-top: 20px;">
-        <span class="lsttitle">全量客户清单: </span>
+        <span class="lsttitle">全量客户清单: </span>共{{files.fulllistlen-1}}条记录，标题为{{files.fulllisttitle.split('|').join(', ')}}
       </el-col>
       <el-col :span="24" style="margin-top: 20px;">
-        <span class="lsttitle">目标客户清单: </span>
+        <span class="lsttitle">全量营销清单: </span>共{{files.marketlistlen-1}}条记录，标题为{{files.marketlisttitle.split('|').join(', ')}}
+      </el-col>
+      <el-col :span="24" style="margin-top: 20px;">
+        <span class="lsttitle">目标客户清单: </span>共{{files.targetlistlen-1}}条记录
       </el-col>
       <el-col :span="24" style="margin-top: 20px;">
         <span class="lsttitle">剔除规则: </span>
@@ -107,8 +110,13 @@ export default {
       explainStr: '',
       files: {
         fulllist: '',
+        fulllistlen: 0,
+        fulllisttitle: '',
         marketlist: '',
-        targetlist: ''
+        marketlistlen: 0,
+        marketlisttitle: '',
+        targetlist: '',
+        targetlistlen: 0
       },
       result_list: {
         total: 0,
@@ -140,7 +148,10 @@ export default {
             file: this.files.fulllist
           }).then((response) => {
             if (response.data.return.code === 0) {
-              if (!(response.data.data.lines > 0 && response.data.data.title.split('|').length === 18)) {
+              if (response.data.data.lines > 0 && response.data.data.title.split('|').length === 18) {
+                this.files.fulllistlen = response.data.data.lines
+                this.files.fulllisttitle = response.data.data.title
+              } else {
                 errorMsg.push('全量数据清单文件内容错误，无数据或缺少必要字段')
               }
             } else {
@@ -149,7 +160,10 @@ export default {
             return axios.post('/fileinfo', { file: this.files.marketlist })
           }).then((response) => {
             if (response.data.return.code === 0) {
-              if (!(response.data.data.lines > 0 && response.data.data.title.split('|').length === 7)) {
+              if (response.data.data.lines > 0 && response.data.data.title.split('|').length === 7) {
+                this.files.marketlistlen = response.data.data.lines
+                this.files.marketlisttitle = response.data.data.title
+              } else {
                 errorMsg.push('全量营销清单文件内容错误，无数据或缺少必要字段')
               }
             } else {
@@ -158,7 +172,9 @@ export default {
             return axios.post('/fileinfo', { file: this.files.targetlist })
           }).then((response) => {
             if (response.data.return.code === 0) {
-              if (!(response.data.data.lines > 0 && response.data.data.title.split('\t').length === 2)) {
+              if (response.data.data.lines > 0 && response.data.data.title.split('\t').length === 2) {
+                this.files.targetlistlen = response.data.data.lines
+              } else {
                 errorMsg.push('目标客户清单文件内容错误，无数据或缺少必要字段')
               }
             } else {
